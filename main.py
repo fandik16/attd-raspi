@@ -9,6 +9,8 @@ from modules.camera import init_camera, capture_image_file
 from modules.rfid import init_pn532, read_card
 from modules.uploader import upload_data
 from modules.utils import RUNNING, stop_all
+from modules.web import start_web_server
+
 
 
 def main():
@@ -21,6 +23,10 @@ def main():
     # Init brightness + button handler
     set_brightness(255)
     start_button_thread()
+
+    #start web
+    start_web_server()
+
 
     # Init camera
     picam2 = init_camera()

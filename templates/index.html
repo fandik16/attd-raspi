@@ -1,5 +1,74 @@
+<!DOCTYPE html>
 <html>
-<body style="margin:0; background:black;">
-    <img src="/video_feed" style="width:100%; height:auto;">
+<head>
+    <title>ATTENDANCE Dashboard</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 5px; }
+        .card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>ATTENDANCE SYSTEM – Web Dashboard</h2>
+
+<div class="card">
+    <h3>Status</h3>
+    <p>Running: <span id="running">...</span></p>
+    <p>LED Mode: <span id="led_mode">...</span></p>
+    <p>Brightness: <span id="brightness">...</span></p>
+</div>
+
+<div class="card">
+    <h3>Control LED</h3>
+    <button onclick="setLed('IDLE')">IDLE</button>
+    <button onclick="setLed('OK')">OK</button>
+    <button onclick="setLed('FAIL')">FAIL</button>
+</div>
+
+<div class="card">
+    <h3>Brightness</h3>
+    <button onclick="setBrightness(255)">ON (255)</button>
+    <button onclick="setBrightness(0)">OFF (0)</button>
+</div>
+
+<script>
+async function refresh() {
+    let r = await fetch('/api/status');
+    let j = await r.json();
+
+    document.getElementById('running').innerText = j.running;
+    document.getElementById('led_mode').innerText = j.led_mode;
+    document.getElementById('brightness').innerText = j.brightness;
+}
+
+async function setLed(mode) {
+    await fetch('/api/led', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({mode})
+    });
+    refresh();
+}
+
+async function setBrightness(value) {
+    await fetch('/api/brightness', {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({value})
+    });
+    refresh();
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+
 </body>
 </html>
