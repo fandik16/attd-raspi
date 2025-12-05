@@ -14,9 +14,9 @@ def led_worker():
     while True:
         if LED_MODE == "IDLE":
             GPIO.output(LED_PIN, GPIO.HIGH)
-            time.sleep(0.005)
+            time.sleep(1)
             GPIO.output(LED_PIN, GPIO.LOW)
-            time.sleep(2)
+            time.sleep(3)
 
         elif LED_MODE == "OK":
             for _ in range(2):
@@ -27,6 +27,18 @@ def led_worker():
             LED_MODE = "IDLE"
 
         elif LED_MODE == "FAIL":
+            GPIO.output(LED_PIN, GPIO.HIGH)
+            time.sleep(0.1)
+            GPIO.output(LED_PIN, GPIO.LOW)
+            time.sleep(0.1)
+            GPIO.output(LED_PIN, GPIO.HIGH)
+            time.sleep(0.1)
+            GPIO.output(LED_PIN, GPIO.LOW)
+            time.sleep(0.1)
+            GPIO.output(LED_PIN, GPIO.HIGH)
+            time.sleep(0.1)
+            GPIO.output(LED_PIN, GPIO.LOW)
+            time.sleep(0.1)
             GPIO.output(LED_PIN, GPIO.HIGH)
             time.sleep(2)
             GPIO.output(LED_PIN, GPIO.LOW)
