@@ -1,17 +1,46 @@
 import os
-from config import BRIGHTNESS_PATH
-from modules.utils import LAST_SCAN
+import time
+import threading
+import RPi.GPIO as GPIO
 
-BRIGHTNESS_IS_ON = True
+BUTTON_PIN = 6
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+AUTO_OFF_SECONDS = 300
 
-def set_brightness(level):
-    global BRIGHTNESS_IS_ON
+class BrightnessController:
+    def __init__(self):
+        self.is_on = True
+        self.last_scan = time.time()
+        self.set_brightness(255)
+        threading.Thread(target=self._button_worker, daemon=True).start()
 
-    os.system(f"echo {level} | sudo tee {BRIGHTNESS_PATH}")
+    def set_brightness(self, level):
+        os.system(f"echo {level} | sudo tee /sys/class/backlight/11-0045/brightness")
 
-    if level == 0:
-        os.system("sudo rmmod edt_ft5x06")
-        BRIGHTNESS_IS_ON = False
-    else:
-        os.system("sudo modprobe edt_ft5x06")
-        BRIGHTNESS_IS_ON = True
+        if level == 0:
+            os.system("sudo rmmod edt_ft5x06")
+            self.is_on = False
+        else:
+            os.system("sudo modprobe edt_ft5x06")
+            self.is_on = True
+
+    def turn_on(self):
+        self.last_scan = time.time()
+        self.set_brightness(255)
+
+    def auto_off_check(self):
+        if self.is_on and (time.time() - self.last_scan >= AUTO_OFF_SECONDS):
+            self.set_brightness(0)
+
+    def _button_worker(self):
+        while True:
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                time.sleep(0.15)
+                if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                    if self.is_on:
+                        self.set_brightness(0)
+                    else:
+                        self.set_brightness(255)
+                    self.last_scan = time.time()
+                    time.sleep(0.5)
+            time.sleep(0.02)
