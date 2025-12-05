@@ -1,4 +1,4 @@
-from pn532 import PN532_SPI
+from pn532 import *
 
 def init_rfid():
     pn532 = PN532_SPI(debug=False, reset=20, cs=4)
