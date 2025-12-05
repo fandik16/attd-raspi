@@ -1,68 +1,56 @@
 import os
+import time
+import threading
+import RPi.GPIO as GPIO
+from modules.utils import RUNNING
 
-BRIGHTNESS_PATH = "/sys/class/backlight/11-0045/brightness"
+BUTTON_PIN = 6
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
-# ============================
-# TOUCHSCREEN DRIVER CONTROL
-# ============================
-def enable_touch():
-    os.system("sudo modprobe edt_ft5x06")
-    print("Touchscreen ENABLED")
-
-def disable_touch():
-    os.system("sudo rmmod edt_ft5x06")
-    print("Touchscreen DISABLED")
+BRIGHTNESS_IS_ON = True
 
 
-# ============================
-# RAW BRIGHTNESS FUNCTION
-# ============================
-def set_brightness(value):
-    try:
-        os.system(f"echo {value} | sudo tee {BRIGHTNESS_PATH}")
+def set_brightness(level):
+    global BRIGHTNESS_IS_ON
 
-        if value == 0:
-            disable_touch()
-        else:
-            enable_touch()
+    os.system(f"echo {level} | sudo tee /sys/class/backlight/11-0045/brightness")
 
-        print(f"Brightness set to {value}")
-
-    except Exception as e:
-        print("Brightness Error:", e)
-
-
-def get_brightness():
-    try:
-        with open(BRIGHTNESS_PATH, "r") as f:
-            return int(f.read().strip())
-    except:
-        return 0
-
-
-def toggle_brightness():
-    current = get_brightness()
-    if current == 0:
-        set_brightness(255)
-        return 255
+    if level == 0:
+        os.system("sudo rmmod edt_ft5x06")
+        BRIGHTNESS_IS_ON = False
+        print("Brightness OFF + touchscreen disabled")
     else:
+        os.system("sudo modprobe edt_ft5x06")
+        BRIGHTNESS_IS_ON = True
+        print("Brightness ON + touchscreen enabled")
+
+
+def auto_brightness_control(last_scan, timeout):
+    if BRIGHTNESS_IS_ON and (time.time() - last_scan >= timeout):
         set_brightness(0)
-        return 0
+        print("Brightness OFF (AUTO)")
 
 
-# ============================
-# CLASS UNTUK DIPAKAI DI web_app.py
-# ============================
-class BrightnessControl:
-    @staticmethod
-    def set(value):
-        set_brightness(value)
+def _button_worker():
+    global BRIGHTNESS_IS_ON
 
-    @staticmethod
-    def get():
-        return get_brightness()
+    while RUNNING:
+        try:
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                time.sleep(0.15)
+                if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                    if BRIGHTNESS_IS_ON:
+                        set_brightness(0)
+                    else:
+                        set_brightness(255)
 
-    @staticmethod
-    def toggle():
-        return toggle_brightness()
+                time.sleep(0.5)
+
+        except:
+            break
+
+        time.sleep(0.02)
+
+
+def start_button_thread():
+    threading.Thread(target=_button_worker, daemon=True).start()

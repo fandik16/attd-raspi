@@ -1,55 +1,36 @@
-# modules/uploader.py
 import requests
 import os
-import time
-
-# IMPORT CONFIG DARI PARENT FOLDER (tempat main.py)
 from config import API_URL, DEVICE_NAME
 
 
-def upload_image(image_path: str, uid_hex: str, uid_dec: int):
-    """
-    Upload foto + UID ke API attendance-logs.
-    """
-
-    if not os.path.exists(image_path):
-        return {
-            "success": False,
-            "message": f"File foto tidak ditemukan: {image_path}"
-        }
+def upload_data(img_path, uid):
 
     try:
-        with open(image_path, "rb") as f:
-            files = {
-                "photo": (os.path.basename(image_path), f, "image/jpeg")
-            }
+        with open(img_path, "rb") as img:
+            files = {"leave_letter": ("image.jpg", img, "image/jpeg")}
+            data = {"device_name": DEVICE_NAME, "card_number": uid}
 
-            data = {
-                "uid_hex": uid_hex,
-                "uid_dec": uid_dec,
-                "device_name": DEVICE_NAME
-            }
-
-            response = requests.post(
-                API_URL,
-                files=files,
-                data=data,
-                timeout=15
-            )
-
-        try:
-            result = response.json()
-        except Exception:
-            return {
-                "success": False,
-                "message": "Server mengirim respon non-JSON",
-                "raw": response.text
-            }
-
-        return result
+            resp = requests.post(API_URL, data=data, files=files, timeout=15)
+            status = resp.status_code
 
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Upload error: {e}"
-        }
+        print("Gagal upload:", e)
+        status = None
+        resp = None
+
+    finally:
+        try:
+            os.remove(img_path)
+        except:
+            pass
+
+    if resp is None:
+        return None
+
+    try:
+        data_json = resp.json()
+    except:
+        print("Response bukan JSON!")
+        return None
+
+    return status, data_json

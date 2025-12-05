@@ -1,22 +1,88 @@
-# main.py
-import threading
-from web_app import app
-from modules.rfid import RFIDWorker
-from modules.led import led_worker
-from modules.utils import ButtonWatcher
+import time
+import os
+import RPi.GPIO as GPIO
+
+from config import API_URL, DEVICE_NAME, APP_VERSION
+from modules.led import start_led_thread, set_led_mode
+from modules.brightness import set_brightness, auto_brightness_control, BUTTON_PIN, start_button_thread
+from modules.camera import init_camera, capture_image_file
+from modules.rfid import init_pn532, read_card
+from modules.uploader import upload_data
+from modules.utils import RUNNING, stop_all
+
+
+def main():
+
+    print("Starting ATTENDANCE SYSTEM", APP_VERSION)
+
+    # Init LED Thread
+    start_led_thread()
+
+    # Init brightness + button handler
+    set_brightness(255)
+    start_button_thread()
+
+    # Init camera
+    picam2 = init_camera()
+
+    # Init RFID
+    pn532 = init_pn532()
+
+    last_scan = time.time()
+    AUTO_OFF_SECONDS = 300
+
+    print("Tempelkan kartu...")
+
+    while RUNNING:
+
+        # Auto Off brightness
+        auto_brightness_control(last_scan, AUTO_OFF_SECONDS)
+
+        # Read RFID
+        uid = read_card(pn532)
+        if uid is None:
+            continue
+
+        # Turn ON brightness when card detected
+        set_brightness(255)
+        last_scan = time.time()
+
+        print("Reading Card:", uid)
+
+        # Take picture
+        img_path = capture_image_file(picam2)
+        if img_path is None:
+            set_led_mode("FAIL")
+            continue
+
+        # Upload to server
+        response = upload_data(img_path, uid)
+
+        # Process response
+        if response is None:
+            set_led_mode("FAIL")
+        else:
+            status, data_json = response
+
+            if status == 200:
+                set_led_mode("OK")
+                print(data_json.get("name"))
+                print(data_json.get("time"))
+            elif status == 404:
+                set_led_mode("FAIL")
+                print("RFID card not found")
+            else:
+                set_led_mode("FAIL")
+                print("Error:", data_json)
+
+        time.sleep(2)
+
+    stop_all(picam2)
+
 
 if __name__ == "__main__":
-    # LED Thread
-    threading.Thread(target=led_worker, daemon=True).start()
-
-    # RFID Thread
-    rfid = RFIDWorker()
-    threading.Thread(target=rfid.run, daemon=True).start()
-
-    # Button Thread
-    button = ButtonWatcher()
-    threading.Thread(target=button.run, daemon=True).start()
-
-    print("System Running → http://0.0.0.0:5000")
-
-    app.run(host="0.0.0.0", port=5000, threaded=True)
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nApp dihentikan oleh user")
+        stop_all()
