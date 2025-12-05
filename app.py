@@ -12,6 +12,12 @@ from picamera2 import Picamera2
 
 
 # =========================
+# GLOBAL FLAG
+# =========================
+RUNNING = True
+
+
+# =========================
 # SETUP LED INDICATOR (D5)
 # =========================
 LED_PIN = 5
@@ -22,33 +28,37 @@ LED_MODE = "IDLE"
 
 
 def led_worker():
-    global LED_MODE
-    while True:
-        mode = LED_MODE
+    global LED_MODE, RUNNING
+    while RUNNING:
+        try:
+            mode = LED_MODE
 
-        if mode == "IDLE":
-            GPIO.output(LED_PIN, GPIO.HIGH)
-            time.sleep(0.005)
-            GPIO.output(LED_PIN, GPIO.LOW)
-            time.sleep(2)
-
-        elif mode == "OK":
-            for _ in range(2):
+            if mode == "IDLE":
                 GPIO.output(LED_PIN, GPIO.HIGH)
-                time.sleep(0.1)
+                time.sleep(0.005)
                 GPIO.output(LED_PIN, GPIO.LOW)
+                time.sleep(2)
+
+            elif mode == "OK":
+                for _ in range(2):
+                    GPIO.output(LED_PIN, GPIO.HIGH)
+                    time.sleep(0.1)
+                    GPIO.output(LED_PIN, GPIO.LOW)
+                    time.sleep(0.1)
+                LED_MODE = "IDLE"
+
+            elif mode == "FAIL":
+                GPIO.output(LED_PIN, GPIO.HIGH)
+                time.sleep(2)
+                GPIO.output(LED_PIN, GPIO.LOW)
+                LED_MODE = "IDLE"
+
+            else:
+                LED_MODE = "IDLE"
                 time.sleep(0.1)
-            LED_MODE = "IDLE"
 
-        elif mode == "FAIL":
-            GPIO.output(LED_PIN, GPIO.HIGH)
-            time.sleep(2)
-            GPIO.output(LED_PIN, GPIO.LOW)
-            LED_MODE = "IDLE"
-
-        else:
-            LED_MODE = "IDLE"
-            time.sleep(0.1)
+        except Exception:
+            break
 
 
 threading.Thread(target=led_worker, daemon=True).start()
@@ -142,21 +152,27 @@ set_brightness(255)
 # BUTTON WORKER (D6 toggle brightness)
 # =========================
 def button_worker():
-    global LAST_SCAN, BRIGHTNESS_IS_ON
+    global LAST_SCAN, BRIGHTNESS_IS_ON, RUNNING
 
-    while True:
-        # Tombol ditekan (LOW)
-        if GPIO.input(BUTTON_PIN) == GPIO.LOW:
-            time.sleep(0.15)  # debounce
-
+    while RUNNING:
+        try:
             if GPIO.input(BUTTON_PIN) == GPIO.LOW:
-                if BRIGHTNESS_IS_ON:
-                    set_brightness(0)
-                else:
-                    set_brightness(255)
+                time.sleep(0.15)  # debounce
 
-                LAST_SCAN = time.time()
-                time.sleep(0.5)  # anti spam
+                if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+
+                    if BRIGHTNESS_IS_ON:
+                        set_brightness(0)
+                    else:
+                        set_brightness(255)
+
+                    LAST_SCAN = time.time()
+                    time.sleep(0.5)  # reset tombol
+
+        except Exception:
+            break
+
+        time.sleep(0.02)
 
 
 threading.Thread(target=button_worker, daemon=True).start()
@@ -211,13 +227,8 @@ if __name__ == '__main__':
             # === Upload ke server ===
             try:
                 with open(img_path, "rb") as img_file:
-                    files = {
-                        "leave_letter": ("image.jpg", img_file, "image/jpeg")
-                    }
-                    data = {
-                        "device_name": DEVICE_NAME,
-                        "card_number": card_decimal
-                    }
+                    files = {"leave_letter": ("image.jpg", img_file, "image/jpeg")}
+                    data = {"device_name": DEVICE_NAME, "card_number": card_decimal}
                     response = requests.post(API_URL, data=data, files=files, timeout=15)
 
                 status = response.status_code
@@ -230,7 +241,7 @@ if __name__ == '__main__':
             finally:
                 try:
                     os.remove(img_path)
-                except Exception:
+                except:
                     pass
 
             print("Status:", status)
@@ -259,15 +270,19 @@ if __name__ == '__main__':
                 LED_MODE = "FAIL"
                 print("Error:", data_json)
 
-            time.sleep(2)  # Anti multi-scan
+            time.sleep(2)
 
     except KeyboardInterrupt:
         print("\nApp dihentikan oleh user")
 
     finally:
+        RUNNING = False
+        time.sleep(0.2)  # beri waktu thread berhenti
+
         GPIO.cleanup()
         try:
             picam2.stop()
         except:
             pass
+
         print("GPIO Clear, Camera Stopped")

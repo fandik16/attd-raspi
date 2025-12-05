@@ -1,5 +1,5 @@
 #install
-- git  clone attd
+- git clone https://github.com/fandik16/attd-raspi.git attd
 - cd attd
 - chmod +x install.sh
 - bash install.sh
