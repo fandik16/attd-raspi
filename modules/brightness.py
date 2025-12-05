@@ -19,6 +19,18 @@ def brightness_off():
     BRIGHTNESS_IS_ON = False
 
 
+def toggle_brightness():
+    """Dipanggil dari tombol"""
+    global BRIGHTNESS_IS_ON
+
+    if BRIGHTNESS_IS_ON:
+        brightness_off()
+        print("Brightness OFF (tombol)")
+    else:
+        brightness_on()
+        print("Brightness ON (tombol)")
+
+
 def brightness_auto_check():
     global LAST_SCAN
     if BRIGHTNESS_IS_ON and (time.time() - LAST_SCAN >= AUTO_OFF_SECONDS):

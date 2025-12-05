@@ -10,9 +10,13 @@ from modules.rfid import init_rfid, read_card
 from modules.uploader import upload_data
 from modules.utils import uid_to_decimal
 from modules.brightness import (
-    brightness_auto_check, brightness_on,
-    update_last_scan
+    brightness_auto_check,
+    brightness_on,
+    update_last_scan,
+    toggle_brightness
 )
+
+from modules.button import button_pressed
 
 
 if __name__ == "__main__":
@@ -22,8 +26,11 @@ if __name__ == "__main__":
         # Start LED
         start_led_thread()
 
-        # Start brightness
+        # Brightness ON at boot
         brightness_on()
+
+        # Button listener
+        button_pressed(toggle_brightness)
 
         # Init RFID
         pn532 = init_rfid()
@@ -31,7 +38,6 @@ if __name__ == "__main__":
 
         while True:
 
-            # Auto OFF brightness
             brightness_auto_check()
 
             # Scan kartu
@@ -39,20 +45,17 @@ if __name__ == "__main__":
             if uid is None:
                 continue
 
-            # Hidupkan brightness saat ada kartu
             brightness_on()
             update_last_scan()
 
             card_dec = uid_to_decimal(uid)
             print("Reading Card:", card_dec)
 
-            # Capture image
             img_path = capture_image()
             if img_path is None:
                 set_led_mode("FAIL")
                 continue
 
-            # Upload
             response = upload_data(API_URL, DEVICE_NAME, card_dec, img_path)
             os.remove(img_path)
 
