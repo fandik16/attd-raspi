@@ -3,16 +3,24 @@ import subprocess
 
 BRIGHTNESS_PATH = "/sys/class/backlight/11-0045/brightness"
 
+
 # ============================
 # TOUCHSCREEN DRIVER CONTROL
 # ============================
 def enable_touch():
-    os.system("sudo modprobe edt_ft5x06")
-    print("Touchscreen ENABLED")
+    try:
+        os.system("sudo modprobe edt_ft5x06")
+        print("Touchscreen ENABLED")
+    except Exception as e:
+        print("Enable touch error:", e)
+
 
 def disable_touch():
-    os.system("sudo rmmod edt_ft5x06")
-    print("Touchscreen DISABLED")
+    try:
+        os.system("sudo rmmod edt_ft5x06")
+        print("Touchscreen DISABLED")
+    except Exception as e:
+        print("Disable touch error:", e)
 
 
 # ============================
@@ -56,7 +64,6 @@ def toggle_brightness():
     if current == 0:
         set_brightness(255)
         return 255
-
     else:
         set_brightness(0)
         return 0

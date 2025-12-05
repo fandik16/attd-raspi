@@ -76,4 +76,5 @@ class RFIDWorker:
     def stop(self):
         """Stop worker."""
         self.running = False
-        self.camera.st
+        self.camera.stop()
+
