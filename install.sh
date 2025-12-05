@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#install picamera2
+sudo apt install python3-picamera2 -y
+
 # Membuat virtual environment dengan akses system site-packages
 python3 -m venv venv --system-site-packages
 
