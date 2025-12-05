@@ -7,16 +7,32 @@ LAST_SCAN = time.time()
 AUTO_OFF_SECONDS = 300
 
 
+def touch_enable():
+    print("Touchscreen ENABLE")
+    os.system("sudo modprobe edt_ft5x06")
+
+
+def touch_disable():
+    print("Touchscreen DISABLE")
+    os.system("sudo rmmod edt_ft5x06")
+
+
 def brightness_on():
     global BRIGHTNESS_IS_ON
     os.system(f"echo 255 | sudo tee {BRIGHTNESS_PATH}")
     BRIGHTNESS_IS_ON = True
+
+    # ENABLE touchscreen
+    touch_enable()
 
 
 def brightness_off():
     global BRIGHTNESS_IS_ON
     os.system(f"echo 0 | sudo tee {BRIGHTNESS_PATH}")
     BRIGHTNESS_IS_ON = False
+
+    # DISABLE touchscreen
+    touch_disable()
 
 
 def toggle_brightness():
