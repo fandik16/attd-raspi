@@ -1,20 +1,25 @@
-# modules/camera.py
 from picamera2 import Picamera2
-import cv2
+from datetime import datetime
+import os
 
 class WebCamera:
-    def __init__(self, size=(1280, 720)):
-        self.picam = Picamera2()
-        cfg = self.picam.create_still_configuration(main={"size": size})
-        self.picam.configure(cfg)
+    def __init__(self):
+        self.picam = None
 
     def start(self):
-        self.picam.start()
+        if self.picam is None:
+            self.picam = Picamera2()
+            config = self.picam.create_still_configuration()
+            self.picam.configure(config)
+            self.picam.start()
 
-    def get_frame_jpeg(self):
-        try:
-            frame = self.picam.capture_array()
-            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            return cv2.imencode(".jpg", frame)[1].tobytes()
-        except:
-            return None
+    def capture(self, path):
+        self.start()
+        self.picam.capture_file(path)
+        return path
+
+    def stop(self):
+        if self.picam:
+            self.picam.stop()
+            self.picam.close()
+            self.picam = None

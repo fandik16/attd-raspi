@@ -1,83 +1,79 @@
-# modules/rfid.py
 import time
-import os
+import threading
 from pn532 import *
-import cv2
-import tempfile
-
-from config import API_URL, DEVICE_NAME, APP_VERSION
-from modules.utils import uid_to_decimal
-from modules.brightness import BrightnessControl
-from modules.utils import TouchControl
-from modules.camera import WebCamera
-from modules.uploader import Uploader
-from modules.led import LED_MODE
-
-brightness = BrightnessControl()
-touch = TouchControl()
-uploader = Uploader()
-camera = WebCamera()
-
-camera.start()
-
-AUTO_OFF = 300
-LAST_SCAN = time.time()
-BRIGHTNESS_ON = True
-
-os.system("echo 255 | sudo tee /sys/class/backlight/11-0045/brightness")
+from .camera import WebCamera
+from .brightness import set_brightness
+from .uploader import upload_image
+from .utils import uid_to_decimal
 
 
 class RFIDWorker:
     def __init__(self):
-        self.pn = PN532_SPI(debug=False, reset=20, cs=4)
-        self.pn.SAM_configuration()
+        # PN532 via SPI
+        self.pn532 = PN532_SPI(debug=False, reset=20, cs=4)
+        ic, ver, rev, support = self.pn532.get_firmware_version()
+        print(f"PN532 Connected — Firmware: {ver}.{rev}")
 
-        print("App Version:", APP_VERSION)
-        print("Ready to Scan...")
+        self.pn532.SAM_configuration()
 
-    def run(self):
-        global LAST_SCAN, BRIGHTNESS_ON, LED_MODE
+        # Kamera hanya dibuat saat class dibuat, TIDAK saat import module
+        self.camera = WebCamera()
 
-        while True:
-            if BRIGHTNESS_ON and (time.time() - LAST_SCAN >= AUTO_OFF):
-                brightness.set(0)
-                touch.disable()
-                BRIGHTNESS_ON = False
-                print("Auto OFF Screen")
+        self.last_scan_time = time.time()
+        self.running = True
 
-            uid = self.pn.read_passive_target(timeout=0.5)
-            if uid is None:
-                continue
+    def start(self):
+        """Start RFID scanning in background thread."""
+        thread = threading.Thread(target=self._loop, daemon=True)
+        thread.start()
+        print("RFID Worker Started.")
 
-            brightness.set(255)
-            touch.enable()
-            BRIGHTNESS_ON = True
-            LAST_SCAN = time.time()
+    def _loop(self):
+        """Worker loop."""
+        while self.running:
+            try:
+                uid = self.pn532.read_passive_target(timeout=0.5)
 
-            card = uid_to_decimal(uid)
-            print("Card:", card)
+                if uid is not None:
+                    self.handle_card(uid)
+                    self.last_scan_time = time.time()
+                else:
+                    # Jika tidak ada kartu selama 60 detik → brightness 0
+                    if (time.time() - self.last_scan_time) > 60:
+                        set_brightness(0)
 
-            img = camera.get_frame_jpeg()
-            if img is None:
-                continue
+            except Exception as e:
+                print(f"RFID Error: {e}")
+                time.sleep(1)
 
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            with open(tmp.name, "wb") as f:
-                f.write(img)
+    def handle_card(self, uid):
+        """Called when a card is detected."""
+        uid_hex = uid.hex().upper()
+        uid_dec = uid_to_decimal(uid)
 
-            resp = uploader.send(API_URL, DEVICE_NAME, card, tmp.name)
+        print(f"UID HEX: {uid_hex}")
+        print(f"UID DEC: {uid_dec}")
 
-            os.remove(tmp.name)
+        # Nyalakan LCD
+        set_brightness(16)
 
-            if resp is None:
-                LED_MODE = "FAIL"
-                continue
+        # Capture foto
+        image_path = f"/home/fandik/attd/captures/{uid_dec}.jpg"
+        try:
+            self.camera.capture(image_path)
+            print(f"Captured: {image_path}")
+        except Exception as e:
+            print(f"Camera Capture Error: {e}")
+            return
 
-            if resp.status_code == 200:
-                LED_MODE = "OK"
-                print(resp.json())
-            else:
-                LED_MODE = "FAIL"
-                print("ERR:", resp.text)
+        # Upload foto
+        try:
+            upload_result = upload_image(image_path, uid_dec)
+            print("Upload Result:", upload_result)
+        except Exception as e:
+            print("Upload Error:", e)
 
-            time.sleep(2)
+    def stop(self):
+        """Stop worker."""
+        self.running = False
+        self.camera.st
