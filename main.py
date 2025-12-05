@@ -3,7 +3,7 @@ import os
 import RPi.GPIO as GPIO
 
 from config import API_URL, DEVICE_NAME, APP_VERSION
-from modules.led import start_led_thread, set_led_mode
+from modules.led import init_led, start_led_thread, set_led_mode
 from modules.brightness import set_brightness, auto_brightness_control, BUTTON_PIN, start_button_thread
 from modules.camera import init_camera, capture_image_file
 from modules.rfid import init_pn532, read_card
@@ -18,6 +18,7 @@ def main():
     print("Starting ATTENDANCE SYSTEM", APP_VERSION)
 
     # Init LED Thread
+    init_led(5)   # atau LED_PIN lain
     start_led_thread()
 
     # Init brightness + button handler
