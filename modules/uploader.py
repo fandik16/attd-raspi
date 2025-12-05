@@ -1,36 +1,13 @@
 import requests
-import os
-from config import API_URL, DEVICE_NAME
 
-
-def upload_data(img_path, uid):
-
+def upload_to_server(api_url, device_name, card_decimal, image_path):
     try:
-        with open(img_path, "rb") as img:
-            files = {"leave_letter": ("image.jpg", img, "image/jpeg")}
-            data = {"device_name": DEVICE_NAME, "card_number": uid}
+        with open(image_path, "rb") as f:
+            files = {"leave_letter": ("image.jpg", f, "image/jpeg")}
+            data = {"device_name": device_name, "card_number": card_decimal}
 
-            resp = requests.post(API_URL, data=data, files=files, timeout=15)
-            status = resp.status_code
+            return requests.post(api_url, data=data, files=files, timeout=15)
 
     except Exception as e:
-        print("Gagal upload:", e)
-        status = None
-        resp = None
-
-    finally:
-        try:
-            os.remove(img_path)
-        except:
-            pass
-
-    if resp is None:
+        print("Upload error:", e)
         return None
-
-    try:
-        data_json = resp.json()
-    except:
-        print("Response bukan JSON!")
-        return None
-
-    return status, data_json

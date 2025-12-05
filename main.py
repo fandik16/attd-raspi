@@ -1,95 +1,108 @@
+import threading
 import time
 import os
+
+from config import API_URL, DEVICE_NAME, APP_VERSION, AUTO_OFF_SECONDS
+from modules.utils import RUNNING, LAST_SCAN, uid_to_decimal
+from modules.led import led_worker, LED_MODE
+from modules.brightness import set_brightness, BRIGHTNESS_IS_ON
+from modules.rfid import init_rfid, scan_rfid
+from modules.camera import capture_image, stop_camera
+from modules.uploader import upload_to_server
+from modules.web import start_web
+
 import RPi.GPIO as GPIO
 
-from config import API_URL, DEVICE_NAME, APP_VERSION
-from modules.led import init_led, start_led_thread, set_led_mode
-from modules.brightness import set_brightness, auto_brightness_control, BUTTON_PIN, start_button_thread
-from modules.camera import init_camera, capture_image_file
-from modules.rfid import init_pn532, read_card
-from modules.uploader import upload_data
-from modules.utils import RUNNING, stop_all
-from modules.web import start_web_server
+
+# BUTTON SETUP
+BUTTON_PIN = 6
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
-
-def main():
-
-    print("Starting ATTENDANCE SYSTEM", APP_VERSION)
-
-    # Init LED Thread
-    init_led(5)   # atau LED_PIN lain
-    start_led_thread()
-
-    # Init brightness + button handler
-    set_brightness(255)
-    start_button_thread()
-
-    #start web
-    start_web_server()
-
-
-    # Init camera
-    picam2 = init_camera()
-
-    # Init RFID
-    pn532 = init_pn532()
-
-    last_scan = time.time()
-    AUTO_OFF_SECONDS = 300
-
-    print("Tempelkan kartu...")
+def button_worker():
+    global LAST_SCAN, BRIGHTNESS_IS_ON, RUNNING
 
     while RUNNING:
+        try:
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                time.sleep(0.15)
 
-        # Auto Off brightness
-        auto_brightness_control(last_scan, AUTO_OFF_SECONDS)
+                if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                    if BRIGHTNESS_IS_ON:
+                        set_brightness(0)
+                    else:
+                        set_brightness(255)
 
-        # Read RFID
-        uid = read_card(pn532)
-        if uid is None:
-            continue
+                    LAST_SCAN = time.time()
+                    time.sleep(0.5)
 
-        # Turn ON brightness when card detected
-        set_brightness(255)
-        last_scan = time.time()
+        except:
+            break
 
-        print("Reading Card:", uid)
-
-        # Take picture
-        img_path = capture_image_file(picam2)
-        if img_path is None:
-            set_led_mode("FAIL")
-            continue
-
-        # Upload to server
-        response = upload_data(img_path, uid)
-
-        # Process response
-        if response is None:
-            set_led_mode("FAIL")
-        else:
-            status, data_json = response
-
-            if status == 200:
-                set_led_mode("OK")
-                print(data_json.get("name"))
-                print(data_json.get("time"))
-            elif status == 404:
-                set_led_mode("FAIL")
-                print("RFID card not found")
-            else:
-                set_led_mode("FAIL")
-                print("Error:", data_json)
-
-        time.sleep(2)
-
-    stop_all(picam2)
+        time.sleep(0.02)
 
 
 if __name__ == "__main__":
+    print("Starting ATTENDANCE SYSTEM", APP_VERSION)
+
+    # start web server
+    start_web()
+
+    # start threads
+    threading.Thread(target=led_worker, daemon=True).start()
+    threading.Thread(target=button_worker, daemon=True).start()
+
+    # init rfid
+    pn532 = init_rfid()
+
+    # brightness on startup
+    set_brightness(255)
+
     try:
-        main()
+
+        while True:
+
+            # AUTO OFF
+            if BRIGHTNESS_IS_ON and (time.time() - LAST_SCAN >= AUTO_OFF_SECONDS):
+                set_brightness(0)
+                print("Brightness OFF auto")
+
+            uid = scan_rfid(pn532)
+            if uid is None:
+                continue
+
+            set_brightness(255)
+            LAST_SCAN = time.time()
+
+            card_decimal = uid_to_decimal(uid)
+            print("CARD:", card_decimal)
+
+            img_path = capture_image()
+            if not img_path:
+                LED_MODE = "FAIL"
+                continue
+
+            resp = upload_to_server(API_URL, DEVICE_NAME, card_decimal, img_path)
+
+            if not resp:
+                LED_MODE = "FAIL"
+                continue
+
+            if resp.status_code == 200:
+                LED_MODE = "OK"
+                print(resp.json())
+            else:
+                LED_MODE = "FAIL"
+                print("Server Err:", resp.status_code)
+
+            time.sleep(2)
+
     except KeyboardInterrupt:
-        print("\nApp dihentikan oleh user")
-        stop_all()
+        print("Stopping...")
+
+    finally:
+        RUNNING = False
+        time.sleep(0.3)
+        GPIO.cleanup()
+        stop_camera()
+        print("GPIO & Camera Cleaned")

@@ -1,19 +1,11 @@
+import time
+
+def uid_to_decimal(uid):
+    try:
+        hex_str = ''.join(f"{x:02x}" for x in reversed(uid))
+        return str(int(hex_str, 16)).zfill(10)
+    except:
+        return "0000000000"
+
 RUNNING = True
-
-def stop_all(cam=None):
-    global RUNNING
-    RUNNING = False
-
-    import time
-    import RPi.GPIO as GPIO
-    
-    time.sleep(0.2)
-
-    if cam:
-        try:
-            cam.stop()
-        except:
-            pass
-
-    GPIO.cleanup()
-    print("GPIO Clear, Camera Stopped")
+LAST_SCAN = time.time()

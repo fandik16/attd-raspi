@@ -1,9 +1,6 @@
-# =======================
 # CONFIG FILE
-# =======================
-# URL tujuan API untuk mengirim data
-API_URL = "http://sysone.smkn1beji.sch.id/api/attendance-logs" # Ganti dengan API Anda
-# Nama device
+API_URL = "http://sysone.smkn1beji.sch.id/api/attendance-logs"
 DEVICE_NAME = "VQHZHYZF"
-#App Version
 APP_VERSION = "1.0"
+BRIGHTNESS_PATH = "/sys/class/backlight/11-0045/brightness"
+AUTO_OFF_SECONDS = 300
