@@ -7,13 +7,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* ==================================================== */
-        /* MODIFIKASI CSS UNTUK FULL SCREEN TANPA SCROLL */
+        /* CSS FULL SCREEN & NO SCROLL */
         /* ==================================================== */
         html, body {
             height: 100%; 
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Menghilangkan scrollbar */
+            overflow: hidden; 
         }
         body { 
             background-color: #f8f9fa; 
@@ -25,8 +25,6 @@
             flex-grow: 1; 
             max-width: 95%;
             height: 100%;
-            /* MENAMBAH JEDAH DARI BAWAH */
-            padding-bottom: 5px; /* Memberikan padding tambahan di bawah container */
         }
         /* Style untuk indikator status */
         .card-status-ok { border-left: 5px solid #198754; } 
@@ -41,18 +39,24 @@
 
         /* Menyesuaikan tinggi elemen live feed */
         #live-camera-card .card-body {
-            height: calc(100% - 48px);
+            /* Tinggi card body disesuaikan untuk mengisi sisa ruang vertikal */
+            height: calc(100% - 48px); 
         }
         #live-camera-card img {
             object-fit: contain; 
             max-height: 100%; 
         }
-
-        /* Styling footer baru */
+        
+        /* Styling footer baru untuk menampung info status */
         .app-footer {
-            padding-top: 10px;
-            font-size: 0.85em;
-            color: #6c757d;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            font-size: 0.9em;
+            color: #495057;
+            border-top: 1px solid #dee2e6;
+            background-color: #e9ecef;
+            width: 100%;
+            text-align: center;
         }
     </style>
 </head>
@@ -62,32 +66,9 @@
         
         <h2 class="text-center mb-3 text-secondary">Attendance Kiosk Status</h2>
         
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body py-2">
-                        <h5 class="card-title text-primary fs-6 mb-1">Device Information</h5>
-                        <p class="card-text mb-0 fs-6">
-                            <strong>Device:</strong> <span id="device-name">Loading...</span> | 
-                            <strong>Version:</strong> <span id="app-version">Loading...</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body py-2">
-                        <h5 class="card-title text-success fs-6 mb-1">Server Info</h5>
-                        <p class="card-text mb-0 fs-6">
-                            <strong>Time:</strong> <span id="server-time" class="badge bg-secondary">Loading...</span> | 
-                            <strong>Status:</strong> <span id="current-status" class="badge bg-info text-dark">Starting up...</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row main-content-row mb-0"> <div class="col-md-7 mb-3 d-flex">
+        <div class="row main-content-row">
+            
+            <div class="col-md-7 mb-3 d-flex">
                 <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">Live Camera Feed</h5>
@@ -128,16 +109,23 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="card-footer text-center text-muted">
-                        Data updates every 2 seconds.
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="app-footer text-center">
-        <p class="mb-0">Kiosk Dashboard v.<span id="app-version-footer"></span></p>
+    <footer class="app-footer">
+        <div class="d-flex justify-content-between container-fluid px-5">
+            <span class="text-start">
+                <strong>Device:</strong> <span id="device-name">N/A</span> (v.<span id="app-version-footer">N/A</span>)
+            </span>
+            <span class="text-center">
+                <strong>Server Time:</strong> <span id="server-time">N/A</span>
+            </span>
+            <span class="text-end">
+                <strong>Main Status:</strong> <span id="current-status" class="badge bg-info text-dark">Starting up...</span>
+            </span>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -147,13 +135,14 @@
             fetch('/api/status')
                 .then(response => response.json())
                 .then(data => {
-                    // Update Device Info
+                    // Update Footer Info
                     document.getElementById('device-name').textContent = data.device_name;
-                    const appVersion = data.app_version; // Ambil versi
-                    document.getElementById('app-version').textContent = appVersion;
-                    document.getElementById('app-version-footer').textContent = appVersion; // Update footer
+                    document.getElementById('app-version-footer').textContent = data.app_version;
                     document.getElementById('server-time').textContent = data.server_time;
-                    document.getElementById('current-status').textContent = data.current_status;
+
+                    // Update Main Status Badge (di footer)
+                    const statusElement = document.getElementById('current-status');
+                    statusElement.textContent = data.current_status;
 
                     // Update LED Mode and Card Styling
                     const ledElement = document.getElementById('led-mode');
