@@ -10,10 +10,10 @@
             background-color: #f8f9fa; 
             padding-top: 20px; 
         }
-        /* Custom border colors based on status */
-        .card-status-ok { border-left: 5px solid #198754; } 
-        .card-status-fail { border-left: 5px solid #dc3545; } 
-        .card-status-idle { border-left: 5px solid #ffc107; } 
+        /* Custom border styling untuk indikator status */
+        .card-status-ok { border-left: 5px solid #198754; } /* Hijau */
+        .card-status-fail { border-left: 5px solid #dc3545; } /* Merah */
+        .card-status-idle { border-left: 5px solid #ffc107; } /* Kuning */
         .status-badge { font-size: 0.9em; font-weight: bold; }
     </style>
 </head>
@@ -77,15 +77,15 @@
                         <h5 class="card-title">Last Scan Result</h5>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                <strong><i class="bi bi-person-badge me-2"></i> Card Number:</strong> 
+                                <strong>Card Number:</strong> 
                                 <span id="last-card-scan">N/A</span>
                             </li>
                             <li class="list-group-item">
-                                <strong><i class="bi bi-person me-2"></i> Name:</strong> 
+                                <strong>Name:</strong> 
                                 <span id="last-name">N/A</span>
                             </li>
                             <li class="list-group-item">
-                                <strong><i class="bi bi-clock me-2"></i> Time Recorded:</strong> 
+                                <strong>Time Recorded:</strong> 
                                 <span id="last-scan-time">N/A</span>
                             </li>
                         </ul>
