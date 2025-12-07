@@ -10,21 +10,23 @@
         /* MODIFIKASI CSS UNTUK FULL SCREEN TANPA SCROLL */
         /* ==================================================== */
         html, body {
-            height: 100%; /* Penting */
+            height: 100%; 
             margin: 0;
             padding: 0;
             overflow: hidden; /* Menghilangkan scrollbar */
         }
         body { 
             background-color: #f8f9fa; 
-            padding: 20px; /* Padding untuk konten utama */
+            padding: 20px; 
             display: flex;
             flex-direction: column;
         }
         .container {
-            flex-grow: 1; /* Kontainer mengisi sisa ruang yang tersedia */
-            max-width: 95%; /* Memastikan penggunaan lebar yang maksimal */
-            height: 100%; /* Memastikan konten di dalamnya menggunakan tinggi yang tersedia */
+            flex-grow: 1; 
+            max-width: 95%;
+            height: 100%;
+            /* MENAMBAH JEDAH DARI BAWAH */
+            padding-bottom: 5px; /* Memberikan padding tambahan di bawah container */
         }
         /* Style untuk indikator status */
         .card-status-ok { border-left: 5px solid #198754; } 
@@ -39,12 +41,18 @@
 
         /* Menyesuaikan tinggi elemen live feed */
         #live-camera-card .card-body {
-            /* Menghitung tinggi yang tersedia setelah header card */
-            height: calc(100% - 48px); /* 48px adalah perkiraan tinggi card-header */
+            height: calc(100% - 48px);
         }
         #live-camera-card img {
-            object-fit: contain; /* Menjaga aspek rasio dan mengisi ruang yang tersedia */
+            object-fit: contain; 
             max-height: 100%; 
+        }
+
+        /* Styling footer baru */
+        .app-footer {
+            padding-top: 10px;
+            font-size: 0.85em;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -79,9 +87,7 @@
             </div>
         </div>
         
-        <div class="row main-content-row">
-            
-            <div class="col-md-7 mb-3 d-flex">
+        <div class="row main-content-row mb-0"> <div class="col-md-7 mb-3 d-flex">
                 <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">Live Camera Feed</h5>
@@ -128,8 +134,11 @@
                 </div>
             </div>
         </div>
-
     </div>
+
+    <footer class="app-footer text-center">
+        <p class="mb-0">Kiosk Dashboard v.<span id="app-version-footer"></span></p>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -140,7 +149,9 @@
                 .then(data => {
                     // Update Device Info
                     document.getElementById('device-name').textContent = data.device_name;
-                    document.getElementById('app-version').textContent = data.app_version;
+                    const appVersion = data.app_version; // Ambil versi
+                    document.getElementById('app-version').textContent = appVersion;
+                    document.getElementById('app-version-footer').textContent = appVersion; // Update footer
                     document.getElementById('server-time').textContent = data.server_time;
                     document.getElementById('current-status').textContent = data.current_status;
 
