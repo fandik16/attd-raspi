@@ -1,0 +1,5 @@
+{
+    "API_URL": "http://sysone.smkn1beji.sch.id/api/attendance-logs",
+    "DEVICE_NAME": "VQHZHYZF",
+    "AUTO_OFF_SECONDS": 300
+}
