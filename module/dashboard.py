@@ -103,31 +103,17 @@ def create_app(state_manager, hardware_module, root_path):
 
     # Stream video ke web
     def generate_frames():
-        # Tentukan persentase pemotongan (misalnya 0.2 = 20% dari setiap sisi akan dipotong)
-        CROP_PERCENT = 0.2 
-        
+        # Menghapus logika rotasi dan zoom
         while True:
             try:
-                # 1. Ambil Frame Asli
+                # 1. Ambil Frame Asli (Tanpa Zoom)
                 frame = hardware_module.picam2.capture_array()
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-                height, width, _ = frame.shape
+                # Rotasi dan Cropping tidak diterapkan di sini
                 
-                # 2. Hitung Koordinat Cropping (Digital Zoom)
-                start_row = int(height * CROP_PERCENT)
-                end_row = int(height * (1 - CROP_PERCENT))
-                start_col = int(width * CROP_PERCENT)
-                end_col = int(width * (1 - CROP_PERCENT))
-                
-                # 3. Potong (Zoom In) Frame
-                frame_cropped = frame[start_row:end_row, start_col:end_col]
-                
-                # 4. Putar Frame 90 Derajat (Untuk tampilan vertikal)
-                frame_rotated = cv2.rotate(frame_cropped, cv2.ROTATE_90_CLOCKWISE)
-
-                # 5. Encode dan Stream
-                ret, buffer = cv2.imencode('.jpg', frame_rotated)
+                # 2. Encode dan Stream Frame Asli (Lanskap)
+                ret, buffer = cv2.imencode('.jpg', frame) 
                 if not ret:
                     continue
 
