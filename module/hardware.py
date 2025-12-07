@@ -1,4 +1,4 @@
-# hardware.py
+# module/hardware.py
 import RPi.GPIO as GPIO
 from picamera2 import Picamera2
 import os
@@ -13,7 +13,7 @@ import tempfile
 RUNNING = True
 BRIGHTNESS_IS_ON = True
 LAST_SCAN = time.time()
-AUTO_OFF_SECONDS = 300
+AUTO_OFF_SECONDS = 300 # 5 menit
 
 # =========================
 # SETUP LED INDICATOR (D5)
@@ -57,6 +57,9 @@ def start_led_worker():
 def set_led_mode(mode):
     global LED_MODE
     LED_MODE = mode
+    
+def get_led_mode():
+    return LED_MODE
 
 
 # =========================
@@ -66,12 +69,13 @@ picam2 = Picamera2()
 
 def setup_camera():
     camera_config = picam2.create_still_configuration(
-        main={"size": (1280, 720)},
+        main={"size": (640, 480)}, # Ukuran lebih kecil untuk streaming yang lebih cepat
         buffer_count=2
     )
     picam2.configure(camera_config)
     picam2.start()
     try:
+        # Coba set auto focus
         picam2.set_controls({"AfMode": 2})
     except Exception:
         pass
@@ -85,6 +89,8 @@ def stop_camera():
 def capture_image_file():
     """Mengambil gambar dari Picamera2, mengkonversi, dan menyimpannya ke file sementara."""
     try:
+        # Ambil frame dengan resolusi yang lebih tinggi jika diperlukan untuk foto
+        # (Saat ini menggunakan resolusi konfigurasi setup_camera)
         frame = picam2.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     except Exception as e:
@@ -99,6 +105,28 @@ def capture_image_file():
         print("Gagal menyimpan gambar:", e)
         return None
 
+# =========================
+# LIVE STREAMING FUNCTIONS
+# =========================
+def get_jpeg_frame():
+    """Mengambil frame dari kamera, mengkonversi ke JPEG, dan mengembalikan byte."""
+    try:
+        # Ambil frame dari Picamera2 (RGB array)
+        frame = picam2.capture_array()
+        
+        # Konversi RGB ke BGR (format yang digunakan OpenCV)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+        # Kompresi frame ke format JPEG
+        # Atur kualitas (e.g., [cv2.IMWRITE_JPEG_QUALITY, 50]) untuk streaming yang lebih cepat
+        ret, buffer = cv2.imencode('.jpg', frame)
+        
+        # Kembalikan byte JPEG
+        return buffer.tobytes()
+        
+    except Exception:
+        return None 
+
 
 # =========================
 # BRIGHTNESS CONTROL + TOUCHSCREEN DRIVER
@@ -106,11 +134,19 @@ def capture_image_file():
 def set_brightness(level):
     global BRIGHTNESS_IS_ON
 
-    os.system(f"echo {level} | sudo tee /sys/class/backlight/11-0045/brightness")
+    # Ganti path ini sesuai dengan driver backlight Anda jika berbeda
+    BRIGHTNESS_PATH = "/sys/class/backlight/11-0045/brightness" 
+    
+    if os.path.exists(BRIGHTNESS_PATH):
+        os.system(f"echo {level} | sudo tee {BRIGHTNESS_PATH}")
+    else:
+        # Jika path tidak ditemukan, cetak peringatan
+        print(f"Peringatan: {BRIGHTNESS_PATH} tidak ditemukan.")
 
     if level == 0:
         print("Brightness OFF → unload touchscreen driver")
-        os.system("sudo rmmod edt_ft5x06")
+        # Ganti nama driver touchscreen jika berbeda
+        os.system("sudo rmmod edt_ft5x06") 
         BRIGHTNESS_IS_ON = False
     else:
         print("Brightness ON → load touchscreen driver")
