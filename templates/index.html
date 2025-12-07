@@ -112,10 +112,10 @@
                         <div class="mt-4">
                             <h5 class="text-muted">Last Scanned:</h5>
                             <div class="mb-2">
-                                <strong>Name:</strong> <span id="last-name" class="fw-bold fs-5">N/A</span>
+                                <strong>Name:</strong> <span id="last-name" class="fw-bold fs-5"></span>
                             </div>
                             <div>
-                                <strong>Time:</strong> <span id="last-scan-time">N/A</span>
+                                <strong>Time:</strong> <span id="last-scan-time"></span>
                             </div>
                         </div>
                         
@@ -189,8 +189,10 @@
                     }
 
                     // Update Last Scan Result
-                    document.getElementById('last-name').textContent = data.last_name;
-                    document.getElementById('last-scan-time').textContent = data.last_scan_time;
+                    // Jika data kosong, tampilkan string kosong, bukan 'N/A'
+                    document.getElementById('last-name').textContent = data.last_name !== 'N/A' ? data.last_name : '';
+                    document.getElementById('last-scan-time').textContent = data.last_scan_time !== 'N/A' ? data.last_scan_time : '';
+
 
                 })
                 .catch(error => {
