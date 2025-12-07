@@ -112,10 +112,10 @@
                         <div class="mt-4">
                             <h5 class="text-muted">Last Scanned:</h5>
                             <div class="mb-2">
-                                <strong>Nama:</strong> <span id="last-name" class="fw-bold fs-5">N/A</span>
+                                <strong>Name:</strong> <span id="last-name" class="fw-bold fs-5">N/A</span>
                             </div>
                             <div>
-                                <strong>Waktu Absensi:</strong> <span id="last-scan-time">N/A</span>
+                                <strong>Time:</strong> <span id="last-scan-time">N/A</span>
                             </div>
                         </div>
                         
@@ -159,7 +159,6 @@
                 .then(response => response.json())
                 .then(data => {
                     // Update Footer Info
-                    // Device name tidak ditampilkan lagi, hanya App Version
                     document.getElementById('app-version-footer').textContent = data.app_version;
                     document.getElementById('server-time').textContent = data.server_time;
 
