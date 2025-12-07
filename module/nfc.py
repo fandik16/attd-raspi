@@ -1,35 +1,107 @@
-# nfc.py
+# module/nfc.py
+
 from pn532 import *
 import time
+import threading
+import tempfile
+import cv2
+import os
+from . import api_client # Import modul api_client
+from . import hardware # Import modul hardware
 
 # =========================
-# SETUP PN532
+# Utility
 # =========================
-pn532 = PN532_SPI(debug=False, reset=20, cs=4)
-
-def setup_pn532():
-    try:
-        pn532.SAM_configuration()
-        return True
-    except Exception as e:
-        print("Gagal konfigurasi PN532:", e)
-        return False
-
 def uid_to_decimal(uid):
-    """Mengkonversi UID dari format byte ke string desimal 10 digit."""
+    """Konversi UID byte ke string desimal."""
     try:
-        # uid.hex() untuk Python >= 3.10
         hex_str = ''.join(f"{x:02x}" for x in reversed(uid))
         return str(int(hex_str, 16)).zfill(10)
     except Exception:
         return "0000000000"
 
-def scan_card():
-    """Mencoba membaca UID dari kartu NFC."""
+# =========================
+# NFC Worker
+# =========================
+def nfc_worker(state_manager):
+    """Worker utama yang memproses pembacaan NFC, kamera, dan API."""
+    
+    # Inisialisasi PN532 di dalam worker
     try:
-        uid = pn532.read_passive_target(timeout=0.5)
-        return uid
-    except Exception:
-        print("PN532 error: retrying...")
-        time.sleep(0.5)
-        return None
+        pn532 = PN532_SPI(debug=False, reset=20, cs=4)
+        pn532.SAM_configuration()
+    except Exception as e:
+        print(f"Gagal konfigurasi PN532: {e}. NFC Worker dimatikan.")
+        return 
+
+    print("RFID Worker Started. Tempelkan kartu...")
+
+    while state_manager.RUNNING:
+        try:
+            # === Auto Off ===
+            auto_off = state_manager.GLOBAL_SETTINGS.get('AUTO_OFF_SECONDS', 300)
+            if hardware.BRIGHTNESS_IS_ON and (time.time() - state_manager.LAST_SCAN >= auto_off):
+                hardware.set_brightness(0)
+                print("Brightness OFF (auto)")
+
+            # === Scan kartu ===
+            uid = pn532.read_passive_target(timeout=0.5)
+
+            if uid is None:
+                continue
+
+            # === Kartu ditemukan: Nyalakan layar & Atur waktu scan terakhir ===
+            hardware.set_brightness(255)
+            state_manager.LAST_SCAN = time.time()
+
+            card_decimal = uid_to_decimal(uid)
+            print("Reading Card:", card_decimal)
+
+            # === Ambil foto dan simpan sementara ===
+            frame = hardware.capture_image_array()
+            if frame is None:
+                state_manager.LED_MODE = "FAIL"
+                continue
+            
+            img_path = None
+            try:
+                temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+                cv2.imwrite(temp.name, frame)
+                img_path = temp.name
+            except Exception as e:
+                print(f"Gagal menyimpan gambar sementara: {e}")
+                state_manager.LED_MODE = "FAIL"
+                continue
+
+            # === Upload ke server ===
+            response_data, status_code = api_client.upload_attendance(
+                img_path, 
+                card_decimal,
+                state_manager.GLOBAL_SETTINGS.get('DEVICE_NAME'),
+                state_manager.GLOBAL_SETTINGS.get('API_URL')
+            )
+
+            # Bersihkan file sementara
+            if os.path.exists(img_path):
+                os.remove(img_path)
+
+            # === PROCESS RESPONSE ===
+            if status_code is None:
+                state_manager.LED_MODE = "FAIL"
+                state_manager.LAST_SCAN_RESULT = {"name": "Upload Error", "time": time.strftime("%H:%M:%S")}
+            elif status_code == 200:
+                state_manager.LED_MODE = "OK"
+                state_manager.LAST_SCAN_RESULT["name"] = response_data.get("name", "SUCCESS")
+                state_manager.LAST_SCAN_RESULT["time"] = response_data.get("time", time.strftime("%H:%M:%S"))
+            elif status_code == 404:
+                state_manager.LED_MODE = "FAIL"
+                state_manager.LAST_SCAN_RESULT = {"name": "Card Not Found", "time": time.strftime("%H:%M:%S")}
+            else:
+                state_manager.LED_MODE = "FAIL"
+                state_manager.LAST_SCAN_RESULT = {"name": f"Server Error {status_code}", "time": time.strftime("%H:%M:%S")}
+
+            time.sleep(2) # Delay setelah scan berhasil/gagal
+
+        except Exception as e:
+            print(f"NFC Worker Error: {e}")
+            time.sleep(5)
