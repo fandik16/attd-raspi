@@ -129,7 +129,7 @@
     <footer class="app-footer">
         <div class="d-flex justify-content-between container-fluid px-5">
             <span class="text-start">
-                <strong>Device:</strong> <span id="device-name">N/A</span> (v.<span id="app-version-footer">N/A</span>)
+                <strong>App Version:</strong> <span id="app-version-footer">N/A</span>
             </span>
             <span class="text-center">
                 <strong>Server Time:</strong> <span id="server-time">N/A</span>
@@ -159,7 +159,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Update Footer Info
-                    document.getElementById('device-name').textContent = data.device_name;
+                    // device_name tidak ditampilkan lagi
                     document.getElementById('app-version-footer').textContent = data.app_version;
                     document.getElementById('server-time').textContent = data.server_time;
 
@@ -190,7 +190,6 @@
                     }
 
                     // Update Last Scan Result
-                    // Card Number (last_card_scan) dihapus dari tampilan, tapi data tetap diambil
                     document.getElementById('last-name').textContent = data.last_name;
                     document.getElementById('last-scan-time').textContent = data.last_scan_time;
 
