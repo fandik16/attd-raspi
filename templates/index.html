@@ -39,11 +39,27 @@
 
         /* Menyesuaikan tinggi elemen live feed */
         #live-camera-card .card-body {
-            height: calc(100% - 48px); 
+            height: calc(100% - 48px);
+            /* Pastikan body card menggunakan flex untuk centering */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+        /* Kontainer gambar agar bisa dibatasi lebarnya (potret) */
+        .portrait-frame {
+            /* 60% dari tinggi card body yang tersedia (agar terlihat portrait/lebih sempit) */
+            height: 100%; 
+            width: 60%; 
+            
+            /* Mengatur rasio aspek potret (misalnya 3:4 atau 9:16) */
+            /* Menggunakan padding-bottom untuk mempertahankan rasio aspek bisa rumit dengan flexbox. 
+               Kita cukup membatasi width/height saja. */
+        }
+
         #live-camera-card img {
             object-fit: contain; 
             max-height: 100%; 
+            width: 100%; 
         }
         
         /* Styling footer baru untuk menampung info status */
@@ -73,10 +89,7 @@
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
             padding: 0.375rem 0.75rem;
-            
-            /* PERUBAHAN DI SINI: Alignment diubah menjadi center */
             text-align: center; 
-            
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -100,13 +113,15 @@
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">Live Camera Feed</h5>
                     </div>
-                    <div class="card-body p-0 d-flex justify-content-center align-items-center">
-                        <img 
-                            src="/video_feed" 
-                            alt="Live Camera Stream" 
-                            class="img-fluid" 
-                            style="width: 100%; border-radius: 0 0 4px 4px;"
-                        >
+                    <div class="card-body p-0">
+                        <div class="portrait-frame">
+                            <img 
+                                src="/video_feed" 
+                                alt="Live Camera Stream" 
+                                class="img-fluid" 
+                                style="border-radius: 0 0 4px 4px;"
+                            >
+                        </div>
                     </div>
                 </div>
             </div>
