@@ -65,7 +65,7 @@
         }
 
         /* ==================================================== */
-        /* CAMERA CARD (col-md-5) */
+        /* CAMERA CARD (col-md-4) */
         /* ==================================================== */
         #live-camera-card.card {
             padding: 0;
@@ -88,14 +88,14 @@
         }
         #live-camera-card img {
             /* Diatur ke CONTAIN agar tidak terpotong atau meregang */
-            object-fit: cover; 
+            object-fit: contain; 
             max-height: 100%; 
             width: 100%; 
             border-radius: 0;
         }
         
         /* ==================================================== */
-        /* STATUS CARD (col-md-7) */
+        /* STATUS CARD (col-md-8) */
         /* ==================================================== */
         /* Jam dan Tanggal */
         .large-time {
@@ -144,7 +144,7 @@
         
         <div class="row main-content-row">
             
-            <div class="col-md-5 d-flex"> 
+            <div class="col-md-4 d-flex"> 
                 <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-body p-0">
                         <div class="portrait-frame">
@@ -159,7 +159,7 @@
                 </div>
             </div>
             
-            <div class="col-md-7 d-flex">
+            <div class="col-md-8 d-flex">
                 <div id="status-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-light p-2">
                         <h5 class="mb-0">
