@@ -2,12 +2,11 @@
 
 from pn532 import *
 import time
-import threading
 import tempfile
 import cv2
 import os
-from . import api_client # Import modul api_client
-from . import hardware # Import modul hardware
+from . import api_client
+from . import hardware
 
 # =========================
 # Utility
@@ -50,7 +49,7 @@ def nfc_worker(state_manager):
             if uid is None:
                 continue
 
-            # === Kartu ditemukan: Nyalakan layar & Atur waktu scan terakhir ===
+            # === Kartu ditemukan ===
             hardware.set_brightness(255)
             state_manager.LAST_SCAN = time.time()
 
@@ -100,7 +99,7 @@ def nfc_worker(state_manager):
                 state_manager.LED_MODE = "FAIL"
                 state_manager.LAST_SCAN_RESULT = {"name": f"Server Error {status_code}", "time": time.strftime("%H:%M:%S")}
 
-            time.sleep(2) # Delay setelah scan berhasil/gagal
+            time.sleep(2)
 
         except Exception as e:
             print(f"NFC Worker Error: {e}")

@@ -7,11 +7,16 @@ import os
 import tempfile
 import cv2
 
-# Import dari konfigurasi & state manager
+# Import dari konfigurasi
 from config import APP_VERSION, SETTINGS_PASSWORD, SETTINGS_FILE
+from . import hardware # Digunakan untuk streaming kamera
 
-# Fungsi load/save JSON dari app.py yang asli, dipindahkan di sini untuk kemudahan
+# =========================
+# FUNGSI MANAJEMEN KONFIGURASI JSON
+# =========================
+
 def load_settings():
+    """Memuat pengaturan dari file JSON."""
     try:
         if not os.path.exists(SETTINGS_FILE):
             return {}
@@ -21,6 +26,7 @@ def load_settings():
         return {}
 
 def save_settings_safely(data):
+    """Menyimpan pengaturan ke file JSON menggunakan penulisan atomik yang aman."""
     tmp_path = None
     try:
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
@@ -28,21 +34,19 @@ def save_settings_safely(data):
         tmp_path = tmp_file.name
         os.replace(tmp_path, SETTINGS_FILE)
         return True
-    except Exception as e:
+    except Exception:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
         return False
 
 # =========================
-# FLASK APP INITIALIZATION
+# FLASK APP INITIALIZATION & ROUTES
 # =========================
-def create_app(state_manager, hardware_module):
-    app = Flask(__name__)
-    app.secret_key = 'supersecretkey' # Diperlukan untuk flash messages
-
-    # =========================
-    # FLASK ROUTES
-    # =========================
+def create_app(state_manager, hardware_module, root_path):
+    
+    # INI ADALAH PERBAIKAN UTAMA: Menggunakan root_path untuk menunjukkan lokasi folder 'templates'
+    app = Flask(__name__, root_path=root_path) 
+    app.secret_key = 'supersecretkey'
 
     @app.route('/')
     def index():
@@ -59,7 +63,6 @@ def create_app(state_manager, hardware_module):
 
     @app.route('/settings')
     def settings():
-        # Memuat pengaturan terbaru setiap kali diakses
         settings_data = load_settings() 
         return render_template('settings.html', 
                                api_url=settings_data.get('API_URL'), 
@@ -72,18 +75,15 @@ def create_app(state_manager, hardware_module):
 
         current_settings = load_settings()
         
-        # Buat objek pengaturan baru (mempertahankan semua kunci lama)
-        new_settings = current_settings
-        new_settings["API_URL"] = new_api_url
-        new_settings["DEVICE_NAME"] = new_device_name
+        current_settings["API_URL"] = new_api_url
+        current_settings["DEVICE_NAME"] = new_device_name
 
-        if save_settings_safely(new_settings):
-            # Perbarui state manager global di memori saat runtime
-            state_manager.GLOBAL_SETTINGS = new_settings
+        if save_settings_safely(current_settings):
+            state_manager.GLOBAL_SETTINGS = current_settings
             
             flash('Pengaturan berhasil disimpan. Harap restart aplikasi untuk menerapkan perubahan pada seluruh sistem.', 'success')
         else:
-            flash('Gagal menyimpan pengaturan. Cek izin file settings.json.', 'danger')
+            flash('Gagal menyimpan pengaturan.', 'danger')
             
         return redirect(url_for('settings'))
 
