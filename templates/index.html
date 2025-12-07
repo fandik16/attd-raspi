@@ -39,7 +39,6 @@
 
         /* Menyesuaikan tinggi elemen live feed */
         #live-camera-card .card-body {
-            /* Tinggi card body disesuaikan untuk mengisi sisa ruang vertikal */
             height: calc(100% - 48px); 
         }
         #live-camera-card img {
@@ -57,6 +56,16 @@
             background-color: #e9ecef;
             width: 100%;
             text-align: center;
+        }
+        /* Style untuk jam besar */
+        .large-time {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #343a40;
+        }
+        .large-date {
+            font-size: 1.5rem;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -92,23 +101,26 @@
                             <span id="led-mode" class="badge status-badge float-end">IDLE</span>
                         </h4>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title">Last Scan Result</h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>Card Number:</strong> 
-                                <span id="last-card-scan">N/A</span>
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Name:</strong> 
-                                <span id="last-name">N/A</span>
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Time Recorded:</strong> 
-                                <span id="last-scan-time">N/A</span>
-                            </li>
-                        </ul>
+                    
+                    <div class="card-body text-center d-flex flex-column justify-content-around">
+                        
+                        <div>
+                            <div id="display-time" class="large-time">--:--:--</div>
+                            <div id="display-date" class="large-date">--/--/----</div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h5 class="text-muted">Last Scanned:</h5>
+                            <div class="mb-2">
+                                <strong>Nama:</strong> <span id="last-name" class="fw-bold fs-5">N/A</span>
+                            </div>
+                            <div>
+                                <strong>Waktu Absensi:</strong> <span id="last-scan-time">N/A</span>
+                            </div>
+                        </div>
+                        
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -131,6 +143,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Fungsi untuk mengupdate jam lokal di card status
+        function updateLocalClock() {
+            const now = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+            document.getElementById('display-time').textContent = now.toLocaleTimeString('id-ID', timeOptions);
+            document.getElementById('display-date').textContent = now.toLocaleDateString('id-ID', dateOptions);
+        }
+
+        // Fungsi untuk mengambil status dari API
         function fetchStatus() {
             fetch('/api/status')
                 .then(response => response.json())
@@ -167,7 +190,7 @@
                     }
 
                     // Update Last Scan Result
-                    document.getElementById('last-card-scan').textContent = data.last_card_scan;
+                    // Card Number (last_card_scan) dihapus dari tampilan, tapi data tetap diambil
                     document.getElementById('last-name').textContent = data.last_name;
                     document.getElementById('last-scan-time').textContent = data.last_scan_time;
 
@@ -178,7 +201,11 @@
                 });
         }
 
-        // Fetch status initially and then every 2 seconds
+        // Jalankan jam lokal setiap detik
+        updateLocalClock();
+        setInterval(updateLocalClock, 1000); 
+
+        // Fetch status dari API awalnya dan ulangi setiap 2 detik
         fetchStatus();
         setInterval(fetchStatus, 2000); 
     </script>
