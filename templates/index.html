@@ -56,15 +56,16 @@
         /* Kontainer gambar untuk memaksa tampilan potret */
         .portrait-frame {
             height: 100%; 
-            width: 100%; /* Diubah ke 100% untuk memenuhi card */
+            width: 100%; 
             overflow: hidden; 
         }
 
         #live-camera-card img {
-            object-fit: cover; /* Cropped potret */
+            /* PERUBAHAN DI SINI: Mengubah 'cover' menjadi 'fill' */
+            object-fit: fill; /* MEREGANGKAN gambar untuk mengisi card sepenuhnya */
             max-height: 100%; 
             width: 100%; 
-            border-radius: 0; /* Diubah ke 0 untuk memenuhi card */
+            border-radius: 0;
         }
         
         /* Styling footer baru untuk menampung info status */
