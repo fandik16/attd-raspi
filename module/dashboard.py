@@ -12,7 +12,7 @@ from config import APP_VERSION, SETTINGS_PASSWORD, SETTINGS_FILE
 from . import hardware # Digunakan untuk streaming kamera
 
 # =========================
-# FUNGSI MANAJEMEN KONFIGURASI JSON
+# FUNGSI MANAJEMEN KONFIGURASI JSON (Diperbaiki)
 # =========================
 
 def load_settings():
@@ -22,23 +22,38 @@ def load_settings():
             return {}
         with open(SETTINGS_FILE, 'r') as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        print(f"!!! CONFIG ERROR: Gagal memuat {SETTINGS_FILE}: {e}")
         return {}
+
 
 def save_settings_safely(data):
     """Menyimpan pengaturan ke file JSON menggunakan penulisan atomik yang aman."""
+    
+    # INISIALISASI VARIABEL AWAL SEBELUM BLOK TRY
     tmp_path = None
+    
     try:
-        # ... (kode penulisan ke file sementara) ...
+        # 1. Buat file sementara dan tulis data
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+            json.dump(data, tmp_file, indent=4)
+        
+        # 2. Ambil nama path file sementara
         tmp_path = tmp_file.name
+        
+        # 3. Ganti file settings.json yang lama dengan file sementara yang baru (Akar masalah izin file sebelumnya)
         os.replace(tmp_path, SETTINGS_FILE)
         return True
+        
     except Exception as e:
-        # Tampilkan error di terminal saat terjadi kegagalan
-        print(f"!!! FILE I/O ERROR: Gagal menulis settings.json: {e}") 
+        # Menangani kegagalan file I/O (Izin, disk penuh, dll.)
+        print(f"!!! FILE I/O ERROR: Gagal menulis {SETTINGS_FILE}: {e}")
+        
+        # Coba bersihkan file sementara yang mungkin telah dibuat
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
-        return False # Mengembalikan False, memicu flash message
+            
+        return False
 
 # =========================
 # FLASK APP INITIALIZATION & ROUTES
