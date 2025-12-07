@@ -8,11 +8,12 @@
     <style>
         body { 
             background-color: #f8f9fa; 
-            padding-top: 20px; /* Tambahkan sedikit padding di atas */
+            padding-top: 20px; 
         }
-        .card-status-ok { border-left: 5px solid #198754; } /* Hijau */
-        .card-status-fail { border-left: 5px solid #dc3545; } /* Merah */
-        .card-status-idle { border-left: 5px solid #ffc107; } /* Kuning */
+        /* Custom border colors based on status */
+        .card-status-ok { border-left: 5px solid #198754; } 
+        .card-status-fail { border-left: 5px solid #dc3545; } 
+        .card-status-idle { border-left: 5px solid #ffc107; } 
         .status-badge { font-size: 0.9em; font-weight: bold; }
     </style>
 </head>
@@ -48,7 +49,23 @@
         </div>
         
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Live Camera Feed</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <img 
+                            src="/video_feed" 
+                            alt="Live Camera Stream" 
+                            class="img-fluid" 
+                            style="width: 100%; border-radius: 0 0 4px 4px;"
+                        >
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
                 <div id="status-card" class="card shadow mb-4">
                     <div class="card-header bg-light">
                         <h4 class="mb-0">
