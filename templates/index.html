@@ -38,32 +38,36 @@
         }
 
         /* Menyesuaikan tinggi elemen live feed */
-        #live-camera-card.card {
-            padding: 0;
-        }
+    #live-camera-card.card {
+        padding: 0;
+        /* Tambahkan margin: 0 agar card menyentuh batas kolom */
+        margin: 0; 
+        border: none; /* Opsional: Hilangkan border card jika ingin terlihat seperti frame murni */
+    }
 
-        #live-camera-card .card-body {
-            height: 100%; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 !important;
-        }
-        
-        /* Kontainer gambar untuk memaksa tampilan potret */
-        .portrait-frame {
-            height: 100%; 
-            width: 80%; 
-            /* Tambahkan overflow hidden agar gambar yang di-cover tidak meluber */
-            overflow: hidden; 
-        }
+    #live-camera-card .card-body {
+        height: 100%; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 !important;
+    }
+    
+    /* Kontainer gambar untuk memaksa tampilan potret */
+    .portrait-frame {
+        height: 100%; 
+        /* PERUBAHAN UTAMA DISINI: Ganti width: 80% menjadi 100% */
+        width: 100%; 
+        overflow: hidden; 
+    }
 
-        #live-camera-card img {
-            /* PERUBAHAN UTAMA DISINI: Menggunakan 'cover' untuk cropping */
-            object-fit: cover; 
-            max-height: 100%; 
-            width: 100%; 
-        }
+    #live-camera-card img {
+        object-fit: cover; 
+        max-height: 100%; 
+        width: 100%; 
+        /* Hapus border-radius bawah (atau semua) agar gambar memenuhi card */
+        border-radius: 0; 
+    }
         
         /* Styling footer baru untuk menampung info status */
         .app-footer {
