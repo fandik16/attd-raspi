@@ -8,29 +8,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> 
     <style>
         /* ==================================================== */
-        /* CSS RESPONSIVE & FITTING */
+        /* GLOBAL STRUCTURE & FULL SCREEN FIT */
         /* ==================================================== */
         html, body {
             height: 100%; 
-            width: 100%; /* Agar bisa di resolusi berapapun */
+            width: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden; 
         }
         body { 
             background-color: #f8f9fa; 
-            padding: 10px; 
+            padding: 10px; /* Padding minimal untuk estetika */
             display: flex;
             flex-direction: column;
         }
         .container {
             flex-grow: 1; 
-            max-width: 95%; /* Lebih responsif */
+            max-width: 98%; /* Lebih responsif */
             height: 100%;
             padding: 0; 
         }
-
-        /* Judul dan Tombol Setting */
+        
+        /* HEADER & FOOTER MINIMAL */
         h2.text-center {
             margin-bottom: 0.5rem !important; 
             font-size: 1.5rem; 
@@ -40,21 +40,63 @@
             top: 10px;
             font-size: 1.2rem; 
         }
-        
+        .app-footer {
+            padding: 5px 15px;
+            font-size: 0.8em; 
+            border-top: 1px solid #dee2e6;
+            background-color: #e9ecef;
+        }
+
         /* ==================================================== */
-        /* LAYOUT & STATUS */
+        /* MAIN CONTENT ROW - Menempati sisa tinggi layar */
         /* ==================================================== */
         .main-content-row {
             flex-grow: 1;
             margin-bottom: 0 !important; 
+            /* Menghapus margin negatif horizontal default Bootstrap agar tidak berantakan */
+            margin-left: 0;
+            margin-right: 0;
         }
-        /* Menggunakan kelas Bootstrap standar (col-md-5, col-md-7) untuk responsivitas yang lebih baik */
-        .col-md-5, .col-md-7 { 
-            margin-bottom: 0.5rem !important; 
-            padding-right: 5px !important;
+        /* Mengurangi padding kolom di baris utama */
+        .main-content-row > div {
             padding-left: 5px !important;
+            padding-right: 5px !important;
+            margin-bottom: 5px;
         }
 
+        /* ==================================================== */
+        /* CAMERA CARD (col-md-5) */
+        /* ==================================================== */
+        #live-camera-card.card {
+            padding: 0;
+            border: none;
+        }
+        #live-camera-card .card-body {
+            height: 100%; 
+            padding: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .portrait-frame {
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #live-camera-card img {
+            /* Diatur ke CONTAIN agar tidak terpotong atau meregang */
+            object-fit: contain; 
+            max-height: 100%; 
+            width: 100%; 
+            border-radius: 0;
+        }
+        
+        /* ==================================================== */
+        /* STATUS CARD (col-md-7) */
+        /* ==================================================== */
         /* Jam dan Tanggal */
         .large-time {
             font-size: 2.5rem; 
@@ -64,7 +106,10 @@
             font-size: 1.2rem; 
         }
         
-        /* Card Status */
+        /* Konten dalam Card */
+        #status-card .card-header {
+            padding: 0.5rem 1rem !important;
+        }
         #status-card .card-body {
             padding: 0.5rem !important; 
         }
@@ -72,50 +117,20 @@
             font-size: 1rem; 
             min-height: calc(1em + 0.75rem + 2px);
         }
-        
-        /* Footer */
-        .app-footer {
-            padding-top: 2px;
-            padding-bottom: 2px;
-            font-size: 0.8em; 
+        /* Mengurangi margin/padding di area Last Scan */
+        .last-scan-area {
+            margin-top: 0.5rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
-        
-        /* Style untuk indikator status */
+        h5.text-muted {
+            font-size: 1rem;
+        }
+        .status-badge { font-size: 0.9em; font-weight: bold; }
         .card-status-ok { border-left: 5px solid #198754; } 
         .card-status-fail { border-left: 5px solid #dc3545; } 
         .card-status-idle { border-left: 5px solid #ffc107; }
-        .status-badge { font-size: 0.9em; font-weight: bold; }
 
-        /* Camera Card */
-        #live-camera-card.card {
-            padding: 0;
-            border: none;
-        }
-        #live-camera-card .card-body {
-            height: 100%; 
-            display: flex; /* Penting untuk centering */
-            justify-content: center;
-            align-items: center;
-            padding: 0 !important;
-        }
-        .portrait-frame {
-            height: 100%; 
-            width: 100%; 
-            overflow: hidden; 
-            /* Tambahkan display flex di sini juga jika diperlukan, untuk centering jika ada ruang kosong */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #live-camera-card img {
-            /* PERUBAHAN UTAMA: Menggunakan 'contain' */
-            object-fit: contain; /* Memastikan gambar utuh dan tidak terpotong atau meregang */
-            max-height: 100%; 
-            width: 100%; 
-            border-radius: 0;
-        }
-        
     </style>
 </head>
 <body>
@@ -129,7 +144,7 @@
         
         <div class="row main-content-row">
             
-            <div class="col-md-5 mb-1 d-flex"> 
+            <div class="col-md-5 d-flex"> 
                 <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-body p-0">
                         <div class="portrait-frame">
@@ -144,7 +159,7 @@
                 </div>
             </div>
             
-            <div class="col-md-7 mb-1 d-flex">
+            <div class="col-md-7 d-flex">
                 <div id="status-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-light p-2">
                         <h5 class="mb-0">
@@ -160,7 +175,7 @@
                             <div id="display-date" class="large-date">--/--/----</div>
                         </div>
 
-                        <div class="mt-4 px-3">
+                        <div class="last-scan-area text-center"> 
                             <h5 class="text-muted">Last Scanned:</h5>
                             
                             <div class="mb-2 text-start">
@@ -217,8 +232,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        // ... (Kode Javascript untuk jam dan fetchStatus tetap sama) ...
         function updateLocalClock() {
             const now = new Date();
             const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
