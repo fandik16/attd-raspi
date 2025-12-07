@@ -38,11 +38,18 @@
         }
 
         /* Menyesuaikan tinggi elemen live feed */
+        /* Karena header dihapus, card body harus mengisi seluruh card */
+        #live-camera-card.card {
+            /* Hapus padding top/bottom bawaan card agar gambar full di dalam card */
+            padding: 0;
+        }
+
         #live-camera-card .card-body {
-            height: calc(100% - 48px);
+            height: 100%; /* Mengisi penuh tinggi card, karena header sudah tidak ada */
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 0 !important; /* Pastikan padding body 0 */
         }
         
         /* Kontainer gambar untuk memaksa tampilan potret */
@@ -55,6 +62,7 @@
             object-fit: contain; 
             max-height: 100%; 
             width: 100%; 
+            /* Hapus border-radius bawah jika ingin tampil full di card (tetapi ini dipertahankan dari sebelumnya) */
         }
         
         /* Styling footer baru untuk menampung info status */
@@ -105,9 +113,7 @@
             
             <div class="col-md-5 mb-3 d-flex">
                 <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
-                    <div class="card-header bg-dark text-white p-2">
-                        <h5 class="mb-0 invisible">Live Camera Feed</h5> 
-                    </div>
+                    
                     <div class="card-body p-0">
                         <div class="portrait-frame">
                             <img 
