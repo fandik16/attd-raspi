@@ -29,15 +29,16 @@ def save_settings_safely(data):
     """Menyimpan pengaturan ke file JSON menggunakan penulisan atomik yang aman."""
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
-            json.dump(data, tmp_file, indent=4)
+        # ... (kode penulisan ke file sementara) ...
         tmp_path = tmp_file.name
         os.replace(tmp_path, SETTINGS_FILE)
         return True
-    except Exception:
+    except Exception as e:
+        # Tampilkan error di terminal saat terjadi kegagalan
+        print(f"!!! FILE I/O ERROR: Gagal menulis settings.json: {e}") 
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
-        return False
+        return False # Mengembalikan False, memicu flash message
 
 # =========================
 # FLASK APP INITIALIZATION & ROUTES
