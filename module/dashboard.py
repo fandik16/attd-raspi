@@ -124,7 +124,7 @@ def create_app(state_manager, hardware_module, root_path):
                 frame_cropped = frame[start_row:end_row, start_col:end_col]
                 
                 # 4. Putar Frame 90 Derajat (Untuk tampilan vertikal)
-                frame_rotated = cv2.rotate(frame_cropped, cv2.ROTATE_90_CLOCKWISE)
+                #frame_rotated = cv2.rotate(frame_cropped, cv2.ROTATE_90_CLOCKWISE)
 
                 # 5. Encode dan Stream
                 ret, buffer = cv2.imencode('.jpg', frame_rotated)
