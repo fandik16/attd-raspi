@@ -84,20 +84,23 @@ def nfc_worker(state_manager):
             if os.path.exists(img_path):
                 os.remove(img_path)
 
-            # === PROCESS RESPONSE ===
+            # === PROCESS RESPONSE (PERBAIKAN DI SINI) ===
             if status_code is None:
+                error_msg = "Upload Error (Timeout/Network)"
                 state_manager.LED_MODE = "FAIL"
-                state_manager.LAST_SCAN_RESULT = {"name": "Upload Error", "time": time.strftime("%H:%M:%S")}
             elif status_code == 200:
+                error_msg = response_data.get("name", "SUCCESS")
                 state_manager.LED_MODE = "OK"
-                state_manager.LAST_SCAN_RESULT["name"] = response_data.get("name", "SUCCESS")
-                state_manager.LAST_SCAN_RESULT["time"] = response_data.get("time", time.strftime("%H:%M:%S"))
             elif status_code == 404:
+                # Menampilkan "message" jika ada, jika tidak, gunakan default.
+                error_msg = response_data.get("message", "Card Not Found")
                 state_manager.LED_MODE = "FAIL"
-                state_manager.LAST_SCAN_RESULT = {"name": "Card Not Found", "time": time.strftime("%H:%M:%S")}
             else:
+                error_msg = f"Server Error {status_code}"
                 state_manager.LED_MODE = "FAIL"
-                state_manager.LAST_SCAN_RESULT = {"name": f"Server Error {status_code}", "time": time.strftime("%H:%M:%S")}
+
+            state_manager.LAST_SCAN_RESULT["name"] = error_msg
+            state_manager.LAST_SCAN_RESULT["time"] = time.strftime("%H:%M:%S")
 
             time.sleep(2)
 
