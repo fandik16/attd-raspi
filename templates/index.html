@@ -6,30 +6,61 @@
     <title>Attendance Kiosk Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* ==================================================== */
+        /* MODIFIKASI CSS UNTUK FULL SCREEN TANPA SCROLL */
+        /* ==================================================== */
+        html, body {
+            height: 100%; /* Penting */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Menghilangkan scrollbar */
+        }
         body { 
             background-color: #f8f9fa; 
-            padding-top: 20px; 
+            padding: 20px; /* Padding untuk konten utama */
+            display: flex;
+            flex-direction: column;
         }
-        /* Custom border styling untuk indikator status */
-        .card-status-ok { border-left: 5px solid #198754; } /* Hijau */
-        .card-status-fail { border-left: 5px solid #dc3545; } /* Merah */
-        .card-status-idle { border-left: 5px solid #ffc107; } /* Kuning */
+        .container {
+            flex-grow: 1; /* Kontainer mengisi sisa ruang yang tersedia */
+            max-width: 95%; /* Memastikan penggunaan lebar yang maksimal */
+            height: 100%; /* Memastikan konten di dalamnya menggunakan tinggi yang tersedia */
+        }
+        /* Style untuk indikator status */
+        .card-status-ok { border-left: 5px solid #198754; } 
+        .card-status-fail { border-left: 5px solid #dc3545; } 
+        .card-status-idle { border-left: 5px solid #ffc107; }
         .status-badge { font-size: 0.9em; font-weight: bold; }
+
+        /* Memastikan baris utama mengisi ruang yang tersedia */
+        .main-content-row {
+            flex-grow: 1;
+        }
+
+        /* Menyesuaikan tinggi elemen live feed */
+        #live-camera-card .card-body {
+            /* Menghitung tinggi yang tersedia setelah header card */
+            height: calc(100% - 48px); /* 48px adalah perkiraan tinggi card-header */
+        }
+        #live-camera-card img {
+            object-fit: contain; /* Menjaga aspek rasio dan mengisi ruang yang tersedia */
+            max-height: 100%; 
+        }
     </style>
 </head>
 <body>
     
     <div class="container">
         
-        <h2 class="text-center mb-4 text-secondary">Attendance Kiosk Status</h2>
+        <h2 class="text-center mb-3 text-secondary">Attendance Kiosk Status</h2>
         
-        <div class="row mb-4">
+        <div class="row mb-3">
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary">Device Information</h5>
-                        <p class="card-text">
-                            <strong>Device:</strong> <span id="device-name">Loading...</span><br>
+                    <div class="card-body py-2">
+                        <h5 class="card-title text-primary fs-6 mb-1">Device Information</h5>
+                        <p class="card-text mb-0 fs-6">
+                            <strong>Device:</strong> <span id="device-name">Loading...</span> | 
                             <strong>Version:</strong> <span id="app-version">Loading...</span>
                         </p>
                     </div>
@@ -37,24 +68,25 @@
             </div>
             <div class="col-md-6">
                 <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title text-success">Server Info</h5>
-                        <p class="card-text">
-                            <strong>Server Time:</strong> <span id="server-time" class="badge bg-secondary">Loading...</span><br>
-                            <strong>Main Status:</strong> <span id="current-status" class="badge bg-info text-dark">Starting up...</span>
+                    <div class="card-body py-2">
+                        <h5 class="card-title text-success fs-6 mb-1">Server Info</h5>
+                        <p class="card-text mb-0 fs-6">
+                            <strong>Time:</strong> <span id="server-time" class="badge bg-secondary">Loading...</span> | 
+                            <strong>Status:</strong> <span id="current-status" class="badge bg-info text-dark">Starting up...</span>
                         </p>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow">
+        <div class="row main-content-row">
+            
+            <div class="col-md-7 mb-3 d-flex">
+                <div id="live-camera-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">Live Camera Feed</h5>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="card-body p-0 d-flex justify-content-center align-items-center">
                         <img 
                             src="/video_feed" 
                             alt="Live Camera Stream" 
@@ -65,8 +97,8 @@
                 </div>
             </div>
             
-            <div class="col-md-6">
-                <div id="status-card" class="card shadow mb-4">
+            <div class="col-md-5 mb-3 d-flex">
+                <div id="status-card" class="card shadow flex-fill d-flex flex-column">
                     <div class="card-header bg-light">
                         <h4 class="mb-0">
                             Status Perangkat
@@ -90,11 +122,13 @@
                             </li>
                         </ul>
                     </div>
+                    <div class="card-footer text-center text-muted">
+                        Data updates every 2 seconds.
+                    </div>
                 </div>
             </div>
         </div>
 
-        <p class="text-muted text-center mt-4">Data automatically updates every 2 seconds.</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
