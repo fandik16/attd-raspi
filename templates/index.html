@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Kiosk Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> 
     <style>
         /* ==================================================== */
         /* CSS FULL SCREEN & NO SCROLL */
@@ -38,36 +39,33 @@
         }
 
         /* Menyesuaikan tinggi elemen live feed */
-    #live-camera-card.card {
-        padding: 0;
-        /* Tambahkan margin: 0 agar card menyentuh batas kolom */
-        margin: 0; 
-        border: none; /* Opsional: Hilangkan border card jika ingin terlihat seperti frame murni */
-    }
+        #live-camera-card.card {
+            padding: 0;
+            margin: 0; 
+            border: none;
+        }
 
-    #live-camera-card .card-body {
-        height: 100%; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0 !important;
-    }
-    
-    /* Kontainer gambar untuk memaksa tampilan potret */
-    .portrait-frame {
-        height: 100%; 
-        /* PERUBAHAN UTAMA DISINI: Ganti width: 80% menjadi 100% */
-        width: 100%; 
-        overflow: hidden; 
-    }
+        #live-camera-card .card-body {
+            height: 100%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 !important;
+        }
+        
+        /* Kontainer gambar untuk memaksa tampilan potret */
+        .portrait-frame {
+            height: 100%; 
+            width: 100%; /* Diubah ke 100% untuk memenuhi card */
+            overflow: hidden; 
+        }
 
-    #live-camera-card img {
-        object-fit: cover; 
-        max-height: 100%; 
-        width: 100%; 
-        /* Hapus border-radius bawah (atau semua) agar gambar memenuhi card */
-        border-radius: 0; 
-    }
+        #live-camera-card img {
+            object-fit: cover; 
+            max-height: 100%; 
+            width: 100%; 
+            border-radius: 0; /* Diubah ke 0 untuk memenuhi card */
+        }
         
         /* Styling footer baru untuk menampung info status */
         .app-footer {
@@ -105,13 +103,30 @@
             font-weight: 500;
             color: #495057;
         }
+
+        /* Style untuk tombol Settings */
+        #settings-button {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 1.5rem;
+            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        #settings-button:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body>
     
     <div class="container">
         
-        <h2 class="text-center mb-3 text-secondary">Attendance Kiosk Status</h2>
+        <h2 class="text-center mb-3 text-secondary">
+            Attendance Kiosk Status
+            <i id="settings-button" class="fas fa-cog" data-bs-toggle="modal" data-bs-target="#passwordModal"></i>
+        </h2>
         
         <div class="row main-content-row">
             
@@ -123,7 +138,7 @@
                                 src="/video_feed" 
                                 alt="Live Camera Stream" 
                                 class="img-fluid" 
-                                style="border-radius: 0 0 4px 4px;"
+                                style="border-radius: 0;"
                             >
                         </div>
                     </div>
@@ -165,6 +180,29 @@
         </div>
     </div>
 
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <form id="passwordForm" method="POST" action="/settings/verify">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="passwordModalLabel">Akses Pengaturan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="passwordInput" class="form-label">Masukkan Password:</label>
+                            <input type="password" class="form-control" id="passwordInput" name="password" required>
+                        </div>
+                        <div id="passwordError" class="text-danger" style="display: none;">Password salah!</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Masuk</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <footer class="app-footer">
         <div class="d-flex justify-content-between container-fluid px-5">
             <span class="text-start">
@@ -182,7 +220,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Fungsi untuk mengupdate jam lokal di card status
+        // ... (kode JavaScript lainnya, seperti fetchStatus, updateLocalClock) ...
+        
         function updateLocalClock() {
             const now = new Date();
             const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
@@ -192,30 +231,24 @@
             document.getElementById('display-date').textContent = now.toLocaleDateString('id-ID', dateOptions);
         }
 
-        // Fungsi untuk mengambil status dari API
         function fetchStatus() {
             fetch('/api/status')
                 .then(response => response.json())
                 .then(data => {
-                    // Update Footer Info
                     document.getElementById('app-version-footer').textContent = data.app_version;
                     document.getElementById('server-time').textContent = data.server_time;
 
-                    // Update Main Status Badge (di footer)
                     const statusElement = document.getElementById('current-status');
                     statusElement.textContent = data.current_status;
 
-                    // Update LED Mode and Card Styling
                     const ledElement = document.getElementById('led-mode');
                     const statusCard = document.getElementById('status-card');
 
                     ledElement.textContent = data.led_mode;
                     
-                    // Clear previous classes
                     ledElement.classList.remove('bg-success', 'bg-danger', 'bg-warning');
                     statusCard.classList.remove('card-status-ok', 'card-status-fail', 'card-status-idle');
                     
-                    // Apply new classes based on LED Mode
                     if (data.led_mode === 'OK') {
                         ledElement.classList.add('bg-success');
                         statusCard.classList.add('card-status-ok');
@@ -227,7 +260,6 @@
                         statusCard.classList.add('card-status-idle');
                     }
 
-                    // Update Last Scan Result
                     document.getElementById('last-name').textContent = data.last_name;
                     document.getElementById('last-scan-time').textContent = data.last_scan_time;
 
@@ -238,11 +270,22 @@
                 });
         }
 
-        // Jalankan jam lokal setiap detik
+        // Handle form submission to check for errors returned via query parameters
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('error') === 'password_fail') {
+                const passwordError = document.getElementById('passwordError');
+                passwordError.style.display = 'block';
+                // Tampilkan modal lagi jika password gagal
+                const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+                modal.show();
+            }
+        });
+
+
         updateLocalClock();
         setInterval(updateLocalClock, 1000); 
 
-        // Fetch status dari API awalnya dan ulangi setiap 2 detik
         fetchStatus();
         setInterval(fetchStatus, 2000); 
     </script>
