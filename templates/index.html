@@ -159,7 +159,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Update Footer Info
-                    // device_name tidak ditampilkan lagi
+                    // Device name tidak ditampilkan lagi, hanya App Version
                     document.getElementById('app-version-footer').textContent = data.app_version;
                     document.getElementById('server-time').textContent = data.server_time;
 
