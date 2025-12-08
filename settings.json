@@ -1,0 +1,5 @@
+{
+    "API_URL": "http://example.com/api/attendance",
+    "DEVICE_NAME": "KIOSK_LOBBY_A",
+    "AUTO_OFF_SECONDS": 300
+}
